@@ -12,7 +12,7 @@ namespace GeneticAlgorithmRobot
         private Stack<Robot>    availableRobot = new Stack<Robot>();
         private Mutex           mutex = new Mutex();
 
-        public int Init()
+        public int GetRobots()
         {
             Connection connection = new Connection(true);
             for (int i = 0; connection.Connect("localhost", 13000 + i, true); i++)
@@ -28,7 +28,7 @@ namespace GeneticAlgorithmRobot
                     mutex.ReleaseMutex();
                 }
                 else
-                    Console.WriteLine("Error while retreiving robot, skiping");
+                    Console.WriteLine("Error while retreiving robot, skipping");
                 connection = new Connection(true);
             }
             return listRobot.Count;

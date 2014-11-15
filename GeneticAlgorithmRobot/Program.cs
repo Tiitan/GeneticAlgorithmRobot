@@ -1,5 +1,4 @@
-﻿
-using Moda;
+﻿using Moda;
 using System;
 using System.Threading;
 
@@ -10,22 +9,9 @@ namespace GeneticAlgorithmRobot
         static void Main(string[] args)
         {
             RobotManager robotManager = new RobotManager();
-            Console.WriteLine("Init");
-            robotManager.Init();
-            Console.WriteLine("TryGetAvailableRobot");
-            Robot robot = robotManager.TryGetAvailableRobot();
-            if (robot != null)
-            {
-                Console.WriteLine("------------ ROBOT ------------");
-                Thread.Sleep(2000);
-                Console.WriteLine("reset");
-                robot.Reset();
-                Thread.Sleep(2000);
-                Console.WriteLine("move");
-                robot.Move(ServoType.SHOULDER, 1024, 10);
-            }
-            else
-                Console.WriteLine("robot null");
+            GeneticAlgorithm geneticAlgorithm = new GeneticAlgorithm(robotManager);
+            if (robotManager.GetRobots() > 0)
+                geneticAlgorithm.Execute();
             Console.ReadKey();
         }
     }
