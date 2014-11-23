@@ -9,14 +9,19 @@ namespace GeneticAlgorithmRobot
 {
     class GeneticAlgorithm
     {
-        const int MAX_GENERATION = 3;
-        const int POPULATION_SIZE = 3;
-        
+        const int MAX_GENERATION = 50;
+        const int POPULATION_SIZE = 1;
+
+        const int ELITISM = 1;
+        const double MUTATION_CHANCE = 0.05;
+
         private int generation = 0;
         private List<Individual> population = new List<Individual>();
         private ManualResetEvent[] doneEvents = new ManualResetEvent[POPULATION_SIZE];
         private RobotManager robotManager;
 
+        private Random random = new Random();
+        private int randomRange;
         public GeneticAlgorithm(RobotManager robotManager)
         {
             this.robotManager = robotManager;
@@ -40,10 +45,16 @@ namespace GeneticAlgorithmRobot
         {
             List<Individual> newPopulation = new List<Individual>();
 
+            for (int i = 0; i < ELITISM; i++)
+                newPopulation.Add(population[i]);
             // placeholder random new generation
-            foreach (Individual individual in population)
-                newPopulation.Add(Individual.GenerateRandom(robotManager));
-
+            for (int i = 0; i < POPULATION_SIZE - ELITISM; i++)
+            {
+                Individual newIndividual = Individual.GenerateFromParents(population[getRandomWithFalloff()], population[getRandomWithFalloff()]);
+                if (random.NextDouble() < MUTATION_CHANCE)
+                    newIndividual = Individual.GenerateFromMutation(newIndividual);
+                newPopulation.Add(newIndividual);
+            }
             population = newPopulation;
         }
 
@@ -71,14 +82,29 @@ namespace GeneticAlgorithmRobot
                 i++;
             }
             WaitHandle.WaitAll(doneEvents);
+            population.Sort();
         }
 
         private void Init()
         {
+            randomRange = 0;
             for (int i = 0; i < POPULATION_SIZE; i++)
             {
                 population.Add(Individual.GenerateRandom(robotManager));
+                randomRange += POPULATION_SIZE - i;
             }
+        }
+
+        private int getRandomWithFalloff()
+        {
+            int value = random.Next(randomRange);
+            for (int i = 0; i < POPULATION_SIZE; i++)
+            {
+                value -= POPULATION_SIZE - i;
+                if (value <= 0)
+                    return i;
+            }
+            throw new Exception("randomRange error");
         }
     }
 }

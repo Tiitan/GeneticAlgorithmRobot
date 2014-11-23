@@ -5,9 +5,15 @@ using System.Threading;
 
 namespace GeneticAlgorithmRobot
 {
-    class Individual
+    class Individual : IComparable
     {
-        
+        const double SPEED_MULTIPLIER = 20.0f;
+        const int minSequence = 20;
+        const int maxSequence = 50;
+        const double evaluationDuration = 6;
+
+        private List<Action> sequence = new List<Action>();
+
         public int IndividualID { get; private set; }
         private static int currentIndividualID = 0;
 
@@ -15,9 +21,52 @@ namespace GeneticAlgorithmRobot
         private double distanceMoved = -1;
         public double DistanceMoved { get { return distanceMoved; } }
 
+        private static Random random = new Random();
+
         internal static Individual GenerateRandom(RobotManager robotManager)
         {
-            return new Individual(robotManager);
+            Individual outIndividiual = new Individual(robotManager);
+            int sequenceSize = Action.getRandomRange(minSequence, maxSequence);
+            for (int n = 0; n < sequenceSize; ++n)
+                outIndividiual.sequence.Add(Action.getRandomAction());
+            return outIndividiual;
+
+        }
+
+        internal static Individual GenerateFromParents(Individual a, Individual b)
+        {
+            Debug.Assert(a.sequence.Count > 0);
+            Debug.Assert(b.sequence.Count > 0);
+
+            Individual newIndividiual = new Individual(a.robotManager);
+
+            // Swap random 2
+            if (random.Next(2) == 1)
+            {
+                Individual tmp = a;
+                a = b;
+                b = tmp;
+            }
+
+            // Merge sequence
+            int splitPositionA = random.Next(a.sequence.Count);
+            for (int i = 0; i < splitPositionA; i++)
+                newIndividiual.sequence.Add(a.sequence[i]);
+            int splitPositionB = random.Next(b.sequence.Count);
+            for (int i = splitPositionB; i < b.sequence.Count; i++)
+                newIndividiual.sequence.Add(b.sequence[i]);
+
+            return newIndividiual;
+        }
+
+        internal static Individual GenerateFromMutation(Individual a)
+        {
+            Debug.Assert(a.sequence.Count > 0);
+
+            Individual newIndividiual = new Individual(a.robotManager);
+            newIndividiual.sequence = a.sequence;
+            newIndividiual.sequence[random.Next(newIndividiual.sequence.Count)] = Action.getRandomAction();
+            return newIndividiual;
         }
 
         private Individual(RobotManager robotManager)
@@ -31,17 +80,29 @@ namespace GeneticAlgorithmRobot
             ManualResetEvent manualResetEvent = threadContext as ManualResetEvent;
             Debug.Assert(manualResetEvent != null);
 
-            Log("Evaluation requested, waiting for an aviable robot...");
+            //Log("Evaluation requested, waiting for an aviable robot...");
             Robot robot = robotManager.WaitGetAvailableRobot();
             if (robot != null)
             {
-                Log("Available robot found, evaluation started...");
+                //Log("Available robot found, evaluation started...");
                 robot.Reset();
                 Moda.Vector3 initialPosition = robot.GetPosition();
 
-                Thread.Sleep(5000); //placeholder robot evaluation
-
-                distanceMoved = (initialPosition - robot.GetPosition()).Length();
+                while (robot.GetTime() < evaluationDuration)
+                {
+                    //Log("Sequence start:");
+                    foreach (Action action in sequence)
+                    {
+                        //Log(action.ToString());
+                        robot.Move(ServoType.SHOULDER, action.shoudlerPosition, 10);
+                        robot.Move(ServoType.ARM, action.armPosition, 10);
+                        robot.Move(ServoType.FINGER, action.fingerPosision, 10);
+                        Thread.Sleep((int)(action.delay / SPEED_MULTIPLIER));
+                        if (robot.GetTime() > evaluationDuration)
+                            break;
+                    }
+                }
+                distanceMoved = -(initialPosition.X - robot.GetPosition().X);
                 Log("Evaluation finished (" + distanceMoved + ").");
 
                 robotManager.ReleaseRobot(robot);
@@ -53,6 +114,15 @@ namespace GeneticAlgorithmRobot
         void Log(string message)
         {
             Console.WriteLine("Individual " + IndividualID + ": " + message);
+        }
+
+        public int CompareTo(object obj)
+        {
+            if (((Individual)obj).distanceMoved < this.distanceMoved)
+                return -1;
+            if (((Individual)obj).distanceMoved > this.distanceMoved)
+                return 1;
+            return 0;
         }
     }
 }
