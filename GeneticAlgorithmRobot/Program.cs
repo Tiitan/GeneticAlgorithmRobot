@@ -11,6 +11,7 @@ namespace GeneticAlgorithmRobot
         {
             RobotManager robotManager = new RobotManager();
             GeneticAlgorithm geneticAlgorithm = new GeneticAlgorithm(robotManager);
+            geneticAlgorithm.Load();
             if (robotManager.GetRobots() > 0)
                 geneticAlgorithm.Execute();
             Console.ReadKey();

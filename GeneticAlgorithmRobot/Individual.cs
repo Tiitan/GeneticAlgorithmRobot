@@ -7,10 +7,10 @@ namespace GeneticAlgorithmRobot
 {
     class Individual : IComparable
     {
-        const double SPEED_MULTIPLIER = 10.0f;
+        const double SPEED_MULTIPLIER = 1.0f;
         const int minSequence = 2;
         const int maxSequence = 5;
-        const double evaluationDuration = 6;
+        const double evaluationDuration = 20;
 
         private List<Action> sequence = new List<Action>();
 
@@ -18,8 +18,11 @@ namespace GeneticAlgorithmRobot
         private static int currentIndividualID = 0;
 
         private RobotManager robotManager;
+
+        private double bestDistanceMoved = -1;
         private double distanceMoved = -1;
         public double DistanceMoved { get { return distanceMoved; } }
+        public double BestDistanceMoved { get { return bestDistanceMoved; } }
 
         private static Random random = new Random();
 
@@ -104,6 +107,9 @@ namespace GeneticAlgorithmRobot
                     }
                 }
                 distanceMoved = -(initialPosition.X - robot.GetPosition().X);
+                if (distanceMoved > bestDistanceMoved)
+                    bestDistanceMoved = distanceMoved;
+
                 Log("Evaluation finished (" + distanceMoved + ").");
 
                 robotManager.ReleaseRobot(robot);
@@ -139,8 +145,13 @@ namespace GeneticAlgorithmRobot
             Individual output = new Individual(robotManager);
             string[] stringActionArray = line.Split(' ');
             foreach (string stringAction in stringActionArray)
-                output.sequence.Add(Action.Deserialize(stringAction));
-            
+            {
+                Action a = Action.Deserialize(stringAction);
+                if (a != null)
+                    output.sequence.Add(a);
+                //else
+                    //Console.WriteLine("Load action error.");
+            }
             return output;
         }
     }

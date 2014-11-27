@@ -66,7 +66,8 @@ namespace GeneticAlgorithmRobot
             string[] actionParameter = stringAction.Split(',');
             if (actionParameter.Length == 4)
                 return new Action(int.Parse(actionParameter[0]), int.Parse(actionParameter[1]), int.Parse(actionParameter[2]), int.Parse(actionParameter[3]));
-            throw new Exception("Action parsing incorect");
+            else
+                return null;
         }
     }
 }

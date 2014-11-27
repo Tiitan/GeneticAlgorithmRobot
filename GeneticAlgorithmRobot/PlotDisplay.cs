@@ -15,9 +15,9 @@ namespace GeneticAlgorithmRobot
         Process gnuplot = new Process();
         StreamWriter gnupStWr;
 
-        public void Init()
+        public void Init(bool isLoaded)
         {
-            if (File.Exists(FILE_NAME))
+            if (/*!isLoaded &&*/ File.Exists(FILE_NAME))
                 File.Delete(FILE_NAME);
 
             gnuplot.StartInfo.FileName = @"C:\Program Files (x86)\gnuplot\bin\gnuplot.exe";

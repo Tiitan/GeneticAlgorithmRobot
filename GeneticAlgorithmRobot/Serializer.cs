@@ -22,16 +22,16 @@ namespace GeneticAlgorithmRobot
             }
         }
 
-        internal static List<Individual> Load()
+        internal static List<Individual> Load(RobotManager robotManager)
         {
             List<Individual> output = new List<Individual>();
 
-            using (StreamReader file = new StreamReader("c:\\test.txt"))
+            using (StreamReader file = new StreamReader(FILE_NAME))
             {
                 string line;
                 while ((line = file.ReadLine()) != null)
                 {
-                    output.Add(Individual.Deserialize(line));
+                    output.Add(Individual.Deserialize(robotManager, line));
                 }
             }
 

@@ -11,7 +11,7 @@ namespace GeneticAlgorithmRobot
     class GeneticAlgorithm
     {
         const int MAX_GENERATION = 1000;
-        const int POPULATION_SIZE = 10;
+        const int POPULATION_SIZE = 100;
         const int THREAD_POOL_SIZE = 16;
 
         const int ELITISM = 1;
@@ -19,7 +19,7 @@ namespace GeneticAlgorithmRobot
 
         private int generation = 0;
         private List<Individual> population = new List<Individual>();
-        private ManualResetEvent[] doneEvents = new ManualResetEvent[POPULATION_SIZE];
+        private ManualResetEvent[] doneEvents = new ManualResetEvent[THREAD_POOL_SIZE];
         private RobotManager robotManager;
 
         private Random random = new Random();
@@ -32,7 +32,7 @@ namespace GeneticAlgorithmRobot
         public GeneticAlgorithm(RobotManager robotManager)
         {
             this.robotManager = robotManager;
-            for (int i = 0; i < POPULATION_SIZE; i++)
+            for (int i = 0; i < THREAD_POOL_SIZE; i++)
                 doneEvents[i] = new ManualResetEvent(false);
         }
 
@@ -40,7 +40,7 @@ namespace GeneticAlgorithmRobot
         {
             try
             {
-                population = Serializer.Load();
+                population = Serializer.Load(robotManager);
                 isloaded = true;
             }
             catch (Exception e)
@@ -69,7 +69,13 @@ namespace GeneticAlgorithmRobot
             for (int i = 0; i < ELITISM; i++)
                 newPopulation.Add(population[i]);
 
-            for (int i = 0; i < POPULATION_SIZE - ELITISM; i++)
+            Individual bestIndividual = population[0];
+            foreach (Individual individual in population)
+                if (individual.BestDistanceMoved > bestIndividual.BestDistanceMoved)
+                    bestIndividual = individual;
+            newPopulation.Add(bestIndividual);
+
+            for (int i = 0; i < POPULATION_SIZE - ELITISM - 1; i++)
             {
                 Individual newIndividual = Individual.GenerateFromParents(population[getRandomWithFalloff()], population[getRandomWithFalloff()]);
                 if (random.NextDouble() < MUTATION_CHANCE)
@@ -98,7 +104,9 @@ namespace GeneticAlgorithmRobot
 
         private void EvaluateGeneration()
         {
-            int n = 0;
+            for (int i = 0; i < population.Count; i++)
+                population[i].Evaluate(new ManualResetEvent(false));
+            /*int n = 0;
             while (n < population.Count)
             {
                 for (int i = 0; i < THREAD_POOL_SIZE; i++)
@@ -110,18 +118,19 @@ namespace GeneticAlgorithmRobot
                         break;
                 }
                 WaitHandle.WaitAll(doneEvents);
-            }
-            population.Sort();
+            }*/
+                population.Sort();
         }
 
         private void Init()
         {
-            plotDisplay.Init();
+            plotDisplay.Init(isloaded);
 
             randomRange = 0;
             for (int i = 0; i < POPULATION_SIZE; i++)
             {
-                population.Add(Individual.GenerateRandom(robotManager));
+                if (!isloaded)
+                    population.Add(Individual.GenerateRandom(robotManager));
                 randomRange += POPULATION_SIZE - i;
             }
         }
