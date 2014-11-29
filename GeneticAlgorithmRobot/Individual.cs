@@ -7,9 +7,9 @@ namespace GeneticAlgorithmRobot
 {
     class Individual : IComparable
     {
-        const double SPEED_MULTIPLIER = 20.0f;
-        const int minSequence = 20;
-        const int maxSequence = 50;
+        const double SPEED_MULTIPLIER = 10.0f;
+        const int minSequence = 2;
+        const int maxSequence = 5;
         const double evaluationDuration = 6;
 
         private List<Action> sequence = new List<Action>();
@@ -87,6 +87,7 @@ namespace GeneticAlgorithmRobot
                 //Log("Available robot found, evaluation started...");
                 robot.Reset();
                 Moda.Vector3 initialPosition = robot.GetPosition();
+                Thread.Sleep((int)(1000 / SPEED_MULTIPLIER));
 
                 while (robot.GetTime() < evaluationDuration)
                 {

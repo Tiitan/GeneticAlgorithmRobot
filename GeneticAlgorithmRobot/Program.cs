@@ -5,6 +5,7 @@ using System.Threading;
 namespace GeneticAlgorithmRobot
 {
     class Program
+
     {
         static void Main(string[] args)
         {

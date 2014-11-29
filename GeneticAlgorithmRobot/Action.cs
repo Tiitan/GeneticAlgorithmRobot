@@ -17,8 +17,8 @@ namespace GeneticAlgorithmRobot
         const int minFingerPosition = 400;
         const int maxFingerPosition = 1024;
 
-        const int minDelayPosition = 30;
-        const int maxDelayPosition = 300;
+        const int minDelayPosition = 300;
+        const int maxDelayPosition = 1000;
 
         public int shoudlerPosition;
         public int armPosition;

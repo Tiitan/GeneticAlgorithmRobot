@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -9,8 +10,8 @@ namespace GeneticAlgorithmRobot
 {
     class GeneticAlgorithm
     {
-        const int MAX_GENERATION = 50;
-        const int POPULATION_SIZE = 1;
+        const int MAX_GENERATION = 1000;
+        const int POPULATION_SIZE = 10;
 
         const int ELITISM = 1;
         const double MUTATION_CHANCE = 0.05;
@@ -22,6 +23,9 @@ namespace GeneticAlgorithmRobot
 
         private Random random = new Random();
         private int randomRange;
+
+        PlotDisplay plotDisplay = new PlotDisplay();
+
         public GeneticAlgorithm(RobotManager robotManager)
         {
             this.robotManager = robotManager;
@@ -47,7 +51,7 @@ namespace GeneticAlgorithmRobot
 
             for (int i = 0; i < ELITISM; i++)
                 newPopulation.Add(population[i]);
-            // placeholder random new generation
+
             for (int i = 0; i < POPULATION_SIZE - ELITISM; i++)
             {
                 Individual newIndividual = Individual.GenerateFromParents(population[getRandomWithFalloff()], population[getRandomWithFalloff()]);
@@ -70,6 +74,8 @@ namespace GeneticAlgorithmRobot
             }
             averageDistanceMoved /= population.Count;
             Console.WriteLine("Generation " + generation + "| Max: " + maxDistanceMoved + ", Average: " + averageDistanceMoved + ".");
+            plotDisplay.LogData(generation, population);
+            plotDisplay.Refresh();
         }
 
         private void EvaluateGeneration()
@@ -78,15 +84,18 @@ namespace GeneticAlgorithmRobot
             foreach (Individual individual in population)
             {
                 doneEvents[i].Reset();
-                ThreadPool.QueueUserWorkItem(individual.Evaluate, doneEvents[i]);
+                individual.Evaluate(doneEvents[i]);
+                //ThreadPool.QueueUserWorkItem(individual.Evaluate, doneEvents[i]);
                 i++;
             }
-            WaitHandle.WaitAll(doneEvents);
+            //WaitHandle.WaitAll(doneEvents);
             population.Sort();
         }
 
         private void Init()
         {
+            plotDisplay.Init();
+
             randomRange = 0;
             for (int i = 0; i < POPULATION_SIZE; i++)
             {
@@ -94,6 +103,7 @@ namespace GeneticAlgorithmRobot
                 randomRange += POPULATION_SIZE - i;
             }
         }
+
 
         private int getRandomWithFalloff()
         {
