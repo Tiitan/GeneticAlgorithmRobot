@@ -125,5 +125,23 @@ namespace GeneticAlgorithmRobot
                 return 1;
             return 0;
         }
+
+        public string Serialize()
+        {
+            string output = "";
+            foreach (Action action in sequence)
+                output += action.Serialize() + " ";
+            return output;
+        }
+
+        internal static Individual Deserialize(RobotManager robotManager, string line)
+        {
+            Individual output = new Individual(robotManager);
+            string[] stringActionArray = line.Split(' ');
+            foreach (string stringAction in stringActionArray)
+                output.sequence.Add(Action.Deserialize(stringAction));
+            
+            return output;
+        }
     }
 }

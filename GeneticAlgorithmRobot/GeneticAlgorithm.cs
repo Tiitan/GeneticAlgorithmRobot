@@ -12,6 +12,7 @@ namespace GeneticAlgorithmRobot
     {
         const int MAX_GENERATION = 1000;
         const int POPULATION_SIZE = 10;
+        const int THREAD_POOL_SIZE = 16;
 
         const int ELITISM = 1;
         const double MUTATION_CHANCE = 0.05;
@@ -24,6 +25,8 @@ namespace GeneticAlgorithmRobot
         private Random random = new Random();
         private int randomRange;
 
+        private bool isloaded = false;
+
         PlotDisplay plotDisplay = new PlotDisplay();
 
         public GeneticAlgorithm(RobotManager robotManager)
@@ -31,6 +34,20 @@ namespace GeneticAlgorithmRobot
             this.robotManager = robotManager;
             for (int i = 0; i < POPULATION_SIZE; i++)
                 doneEvents[i] = new ManualResetEvent(false);
+        }
+
+        public void Load()
+        {
+            try
+            {
+                population = Serializer.Load();
+                isloaded = true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("load error: " + e.Message);
+            }
+            
         }
 
         public void Execute()
@@ -76,19 +93,24 @@ namespace GeneticAlgorithmRobot
             Console.WriteLine("Generation " + generation + "| Max: " + maxDistanceMoved + ", Average: " + averageDistanceMoved + ".");
             plotDisplay.LogData(generation, population);
             plotDisplay.Refresh();
+            Serializer.Save(population);
         }
 
         private void EvaluateGeneration()
         {
-            int i = 0;
-            foreach (Individual individual in population)
+            int n = 0;
+            while (n < population.Count)
             {
-                doneEvents[i].Reset();
-                individual.Evaluate(doneEvents[i]);
-                //ThreadPool.QueueUserWorkItem(individual.Evaluate, doneEvents[i]);
-                i++;
+                for (int i = 0; i < THREAD_POOL_SIZE; i++)
+                {
+                    doneEvents[i].Reset();
+                    population[n].Evaluate(doneEvents[i]);
+                    ThreadPool.QueueUserWorkItem(population[n].Evaluate, doneEvents[i]);
+                    if (++n >= population.Count)
+                        break;
+                }
+                WaitHandle.WaitAll(doneEvents);
             }
-            //WaitHandle.WaitAll(doneEvents);
             population.Sort();
         }
 
