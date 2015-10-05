@@ -26,12 +26,12 @@ namespace GeneticAlgorithmRobot
             try
             {
                 gnuplot.Start();
+                gnupStWr = gnuplot.StandardInput;
             }
             catch
             {
 
             }
-            gnupStWr = gnuplot.StandardInput;
         }
 
         ~PlotDisplay()
